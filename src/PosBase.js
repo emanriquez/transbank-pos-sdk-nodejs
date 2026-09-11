@@ -133,22 +133,7 @@ module.exports = class POSBase extends EventEmitter {
 
             this.parser.on("data", (data) => {
                 this.debug(`IN <-- ${this.bufferToPrintableString(data)}`)
-
-                // Primero, se recibe un ACK
-                if (this.itsAnACK(data)) {
-                    if (typeof this.ackCallback === "function") {
-                        this.ackCallback(data)
-                    }
-                    return
-                }
-
-                // Si se recibió una respuesta (diferente a un ACK) entonces responder con un ACK y mandar el mensaje por callback
-                this.port.write(Buffer.from([ACK]))
-                this.debug(`OUT --> ${this.bufferToPrintableString([ACK])}`)
-                if (typeof this.responseCallback === "function") {
-                    this.responseCallback(data)
-                }
-
+                this.handleIncoming(data)
             }) // will emit data if there is a pause between packets of at least 30ms
 
 
@@ -312,6 +297,42 @@ module.exports = class POSBase extends EventEmitter {
 
     itsAnACK(data) {
         return Buffer.compare(data, Buffer.from([ACK])) === 0
+    }
+
+    /**
+     * El IM30 a veces pega el ACK y el 0900/0210 en el mismo chunk del parser (100 ms).
+     * itsAnACK solo acepta un buffer de 1 byte; si no separamos, el ACK no corre,
+     * sale() cae a los 2 s y el kiosk reintenta (doble cobro).
+     */
+    handleIncoming(data) {
+        if (!data || data.length === 0) {
+            return
+        }
+
+        let rest = data
+        if (data[0] === ACK) {
+            if (typeof this.ackCallback === "function") {
+                this.ackCallback(data.subarray(0, 1))
+            }
+            if (data.length === 1) {
+                return
+            }
+            rest = data.subarray(1)
+            this.debug(`IN <-- (frame) ${this.bufferToPrintableString(rest)}`)
+        }
+
+        if (this.itsAnACK(rest)) {
+            if (typeof this.ackCallback === "function") {
+                this.ackCallback(rest)
+            }
+            return
+        }
+
+        this.port.write(Buffer.from([ACK]))
+        this.debug(`OUT --> ${this.bufferToPrintableString([ACK])}`)
+        if (typeof this.responseCallback === "function") {
+            this.responseCallback(rest)
+        }
     }
 
     /*  

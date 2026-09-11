@@ -1,6 +1,8 @@
 # Transbank POS SDK Node.js
 
-SDK Oficial de Transbank para comunicarse con POS Verifone vx520, vx520c, Ingenico 3500 y POS Autoservicio
+SDK Oficial de Transbank para comunicarse con POS Verifone vx520, vx520c, Ingenico 3500 y POS Autoservicio.
+
+**Fork Parkup:** el tótem lo consume con `workspace:*`. En `src/PosBase.js`, los códigos 78–88 (wait) no resuelven `sale()` aunque el frame no sea `0900`.
 
 ## Requisitos
 - Node.js 20+

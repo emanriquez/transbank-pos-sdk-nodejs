@@ -1,12 +1,14 @@
 {
   "name": "transbank-pos-sdk",
-  "version": "4.0.0",
-  "description": "SDK Web para POS Integrado en Node.js",
-  "main": "dist/transbank.js",
+  "version": "4.0.0-parkup.1",
+  "private": true,
+  "description": "SDK Web para POS Integrado en Node.js (fork Parkup)",
+  "main": "index.js",
   "scripts": {
     "prepublish": "npm run build",
     "dev": "node ./examples/index.js --watch",
-    "build": "webpack",
+    "build": "node -e \"process.exit(0)\"",
+    "build:webpack": "webpack",
     "start": "webpack --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
